@@ -5,19 +5,20 @@ const requestParser = require('../../src/lib/request-parser');
 
 describe('request-parser', () => {
   it('resolves with the request', () => {
-    var request = new FakeRequest('http://localhost:3000/fake');
-    return requestParser(request)
+    var req = new FakeRequest('http://localhost:3000/fake');
+    return requestParser(req)
       .then(result => {
-        expect(result).toBe(request);
+        expect(result).toBe(req);
       });
   });
   it('parses url into parsedURL', () => {
-    var request = new FakeRequest('http://localhost:3000/fake?qs=1');
+    var req = new FakeRequest('http://localhost:3000/fake?qs=1');
 
-    return requestParser(request)
+    return requestParser(req)
       .then(() => {
-        expect(request.parsedUrl).toBeDefined();
-        expect(request.parsedUrl.pathname).toBe('qs=1');
+        expect(req.parsedUrl).toBeDefined();
+        expect(req.parsedUrl.pathname).toBe('/fake');
+        expect(req.parsedUrl.query).toBe('qs=1');
       });
   });
 
@@ -56,12 +57,12 @@ describe('request-parser', () => {
 
       //emit after the promise and before the then
       //create json key (first emit): value syntax second emit
-      request.emit('data', new Buffer('{"abc "'));
+      request.emit('data', new Buffer('{"abc"'));
       request.emit('data', new Buffer(': 123}'));
       request.emit('end');
       return parser.then(result => {
         expect(result).toBe(request);
-        expect(request.body).toBe('{ abc : 123 }');
+        expect(request.body).toEqual({'abc' : 123});
       });
     });
 
@@ -76,10 +77,11 @@ describe('request-parser', () => {
       request.emit('data', new Buffer(':123'));
       request.emit('end');
 
-      return expect.parser.rejects.tothrow('JSON')
+      return expect(parser)
+        .rejects.toThrow('JSON')
         .then(() => {
           expect(request.body).toBe(null);
-          expect(request.body).toBe('{"abc":123');
+          expect(request.text).toBe('{"abc":123');
         });
         
     });
@@ -91,5 +93,6 @@ class FakeRequest extends EventEmitter {
     super();
     this.url = url;
     this.method = method;
+    this.headers = {};
   }
 }
