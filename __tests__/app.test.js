@@ -20,6 +20,30 @@ describe('app', () => {
       .expect(response => {expect(response.text[0]).toBe('<');
       });
   });
+  it('json response for the /api/cowsay route', () => {
+    return request(app)
+      .get('/api/cowsay?text=Hello')
+      .expect(200)
+      .expect('Content-Type', 'application/json')
+      .expect(response => {
+        expect(response.body).toBeDefined();
+        expect(response.body.content).toMatch('Hello');
+      });
+  });
+
+  it('handles a POST request', () => {
+  
+    return request(app)
+      .post('/api/cowsay?text=TEST')
+      .expect(200)
+      .expect('Content-Type', 'application/json')
+      .expect(response => {
+        expect(response.body).toBeDefined();
+        expect(response.body.content).toMatch('TEST');
+      });
+  }); 
+
+
 
   it('respond with 500 for /500', () => {
     return request(app)

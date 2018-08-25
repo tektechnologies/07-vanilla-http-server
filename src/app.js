@@ -1,7 +1,7 @@
 'use strict';
 
 const http = require('http');
-
+const cowsay = require('cowsay');
 const requestParser = require('./lib/request-parser');
 
 
@@ -25,8 +25,7 @@ function requestHandler(req,res){
     .then(() => {
       if(req.parsedUrl.pathname === '/500'){
         throw new Error('Test Error');
-      }
-      if(req.method === 'GET' && req.parsedUrl.pathname === '/'){
+      } if(req.method === 'GET' && req.parsedUrl.pathname === '/'){
         html(res, `<!DOCTYPE html>
         <html>
           <head>
@@ -47,12 +46,43 @@ function requestHandler(req,res){
         </html>`);
         return;
       }
+      if(req.method === 'GET' && req.parsedUrl.pathname === '/api/cowsay' && req.query.text){
+        console.log('Method is post');
+        json(res, {
+          content: cowsay.say(req.query),
+        });
+        return;
+      }
+      if(req.method === 'POST' && req.parsedUrl.pathname === '/api/cowsay'  && req.query.text){
+        console.log('Method is POST');
+        // let content ='';
+        // if(!req.body){content = 'Invalid content: request: body required';}
+        //  if (req.body.text) );}
+        // else {content = 'Invalid content: text query required';}
+    
+        // let object = {content: content};
+        json(res, {content : cowsay.say({text: req.query.text})});
+        // res.setHeader('Content-Type', 'text/html');
+        // res.statusCode = 200;
+        // res.statusMessage = 'OK';
+        // res.
+        return;
+      }
       notFound(res);
     })
     .catch(err => {
       console.error(err);
       html(res, err.message, 500, 'Internal Server Error');
     });
+
+  
+
+
+
+
+
+
+
 }
 
 
@@ -63,6 +93,19 @@ function html(res, content, statusCode = 200, statusMessage = 'OK'){
   res.write(content);
   res.end();
 }
+
+function json (res, object){
+  if(object){
+    res.statusCode = 200;
+    res.statusMessage = 'OK';
+    res.setHeader('Content-Type', 'application/json');
+    res.write(JSON.stringify(object));
+    res.end();
+  }else{ 
+    res.statusCode = 400;
+  }
+}
+
 
 function notFound(res){
   res.statusCode = 404;
